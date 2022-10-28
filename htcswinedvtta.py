@@ -1,6 +1,6 @@
 model = dict(
     type='HybridTaskCascade',
-    pretrained="/kaggle/working/mmdetection/htc_cbv2_swin_large22k_patch4_window7_mstrain_400-1400_giou_4conv1f_adamw_1x_coco.pth",
+    pretrained="/kaggle/working/mmdetection/cascade_mask_rcnn_cbv2_swin_small_patch4_window7_mstrain_400-1400_adamw_3x_coco.pth",
     backbone=dict(
         type='CBSwinTransformer',
         embed_dim=192,
@@ -428,7 +428,7 @@ log_config = dict(
 custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = "/kaggle/working/mmdetection/htc_cbv2_swin_large22k_patch4_window7_mstrain_400-1400_giou_4conv1f_adamw_1x_coco.pth"
+load_from = "/kaggle/working/mmdetection/cascade_mask_rcnn_cbv2_swin_small_patch4_window7_mstrain_400-1400_adamw_3x_coco.pth"
 resume_from = None
 workflow = [('train', 1)]
 samples_per_gpu = 1
