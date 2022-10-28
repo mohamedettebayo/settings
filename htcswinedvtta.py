@@ -3,34 +3,22 @@ data_root = 'data/coco/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
-    dict(type='LoadImageFromFile', to_float32=True),
-    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+    dict(type='LoadImageFromFile'),
+    dict(
+        type='LoadAnnotations', with_bbox=True, with_mask=True, with_seg=True),
+    dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
-    dict(
-        type='Resize',
-        img_scale=(1024, 1024),
-        ratio_range=(0.1, 2.0),
-        multiscale_mode='range',
-        keep_ratio=True),
-    dict(
-        type='RandomCrop',
-        crop_size=(1024, 1024),
-        crop_type='absolute',
-        recompute_bbox=True,
-        allow_negative_crop=True),
-    dict(
-        type='FilterAnnotations', min_gt_bbox_wh=(1e-05, 1e-05), by_mask=True),
-    dict(
-        type='Pad',
-        size=(1024, 1024),
-        pad_val=dict(img=(128, 128, 128), masks=0, seg=255)),
     dict(
         type='Normalize',
         mean=[123.675, 116.28, 103.53],
         std=[58.395, 57.12, 57.375],
         to_rgb=True),
-    dict(type='DefaultFormatBundle', img_to_float=True),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks'])
+    dict(type='Pad', size_divisor=32),
+    dict(type='SegRescale', scale_factor=0.125),
+    dict(type='DefaultFormatBundle'),
+    dict(
+        type='Collect',
+        keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks', 'gt_semantic_seg'])
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -40,16 +28,13 @@ test_pipeline = [
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
-            dict(type='RandomFlip'),
-            dict(
-                type='Pad',
-                size_divisor=32,
-                pad_val=dict(img=(128, 128, 128), masks=0, seg=255)),
+            dict(type='RandomFlip', flip_ratio=0.5),
             dict(
                 type='Normalize',
                 mean=[123.675, 116.28, 103.53],
                 std=[58.395, 57.12, 57.375],
                 to_rgb=True),
+            dict(type='Pad', size_divisor=32),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img'])
         ])
@@ -63,39 +48,30 @@ data = dict(
         '/kagle/working/mmdetection/data/coco/train/_annotations.coco.json',
         img_prefix='/kagle/working/mmdetection/data/coco/train/',
         pipeline=[
-            dict(type='LoadImageFromFile', to_float32=True),
-            dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='LoadAnnotations',
+                with_bbox=True,
+                with_mask=True,
+                with_seg=True),
+            dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
             dict(type='RandomFlip', flip_ratio=0.5),
-            dict(
-                type='Resize',
-                img_scale=(1024, 1024),
-                ratio_range=(0.1, 2.0),
-                multiscale_mode='range',
-                keep_ratio=True),
-            dict(
-                type='RandomCrop',
-                crop_size=(1024, 1024),
-                crop_type='absolute',
-                recompute_bbox=True,
-                allow_negative_crop=True),
-            dict(
-                type='FilterAnnotations',
-                min_gt_bbox_wh=(1e-05, 1e-05),
-                by_mask=True),
-            dict(
-                type='Pad',
-                size=(1024, 1024),
-                pad_val=dict(img=(128, 128, 128), masks=0, seg=255)),
             dict(
                 type='Normalize',
                 mean=[123.675, 116.28, 103.53],
                 std=[58.395, 57.12, 57.375],
                 to_rgb=True),
-            dict(type='DefaultFormatBundle', img_to_float=True),
+            dict(type='Pad', size_divisor=32),
+            dict(type='SegRescale', scale_factor=0.125),
+            dict(type='DefaultFormatBundle'),
             dict(
                 type='Collect',
-                keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks'])
+                keys=[
+                    'img', 'gt_bboxes', 'gt_labels', 'gt_masks',
+                    'gt_semantic_seg'
+                ])
         ],
+        seg_prefix='data/coco/stuffthingmaps/train2017/',
         classes=('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12',
                  '13', '14', '15', '16', '17', '18', '19', '20', '21', '22',
                  '23', '24', '25', '26', '27', '28', '29', '30', '31', '32',
@@ -115,16 +91,13 @@ data = dict(
                 flip=False,
                 transforms=[
                     dict(type='Resize', keep_ratio=True),
-                    dict(type='RandomFlip'),
-                    dict(
-                        type='Pad',
-                        size_divisor=32,
-                        pad_val=dict(img=(128, 128, 128), masks=0, seg=255)),
+                    dict(type='RandomFlip', flip_ratio=0.5),
                     dict(
                         type='Normalize',
                         mean=[123.675, 116.28, 103.53],
                         std=[58.395, 57.12, 57.375],
                         to_rgb=True),
+                    dict(type='Pad', size_divisor=32),
                     dict(type='ImageToTensor', keys=['img']),
                     dict(type='Collect', keys=['img'])
                 ])
@@ -148,16 +121,13 @@ data = dict(
                 flip=False,
                 transforms=[
                     dict(type='Resize', keep_ratio=True),
-                    dict(type='RandomFlip'),
-                    dict(
-                        type='Pad',
-                        size_divisor=32,
-                        pad_val=dict(img=(128, 128, 128), masks=0, seg=255)),
+                    dict(type='RandomFlip', flip_ratio=0.5),
                     dict(
                         type='Normalize',
                         mean=[123.675, 116.28, 103.53],
                         std=[58.395, 57.12, 57.375],
                         to_rgb=True),
+                    dict(type='Pad', size_divisor=32),
                     dict(type='ImageToTensor', keys=['img']),
                     dict(type='Collect', keys=['img'])
                 ])
@@ -168,12 +138,17 @@ data = dict(
                  'Caries', 'Crown', 'Filling', 'Implant', 'Periapical lesion',
                  'Prefabricated metal post', 'Retained root',
                  'Root canal filling', 'Root canal obturation')))
-evaluation = dict(
-    interval=5000,
-    metric=['bbox', 'segm'],
-    dynamic_intervals=[(365001, 368750)])
-checkpoint_config = dict(
-    interval=5000, by_epoch=False, save_last=True, max_keep_ckpts=3)
+evaluation = dict(metric=['bbox', 'segm'])
+optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+optimizer_config = dict(grad_clip=None)
+lr_config = dict(
+    policy='step',
+    warmup='linear',
+    warmup_iters=500,
+    warmup_ratio=0.001,
+    step=[8, 11])
+runner = dict(type='EpochBasedRunner', max_epochs=10)
+checkpoint_config = dict(interval=1)
 log_config = dict(
     interval=50,
     hooks=[dict(type='TextLoggerHook'),
@@ -183,290 +158,260 @@ dist_params = dict(backend='nccl')
 log_level = 'INFO'
 load_from = None
 resume_from = None
-workflow = [('train', 5000)]
+workflow = [('train', 1)]
 opencv_num_threads = 0
 mp_start_method = 'fork'
-auto_scale_lr = dict(enable=False, base_batch_size=10)
-num_things_classes = 41
-num_stuff_classes = 0
-num_classes = 41
+auto_scale_lr = dict(enable=False, base_batch_size=16)
 model = dict(
-    type='Mask2Former',
+    type='HybridTaskCascade',
     backbone=dict(
-        type='SwinTransformer',
-        embed_dims=96,
-        depths=[2, 2, 6, 2],
-        num_heads=[3, 6, 12, 24],
-        window_size=7,
-        mlp_ratio=4,
-        qkv_bias=True,
-        qk_scale=None,
-        drop_rate=0.0,
-        attn_drop_rate=0.0,
-        drop_path_rate=0.3,
-        patch_norm=True,
+        type='DetectoRS_ResNet',
+        depth=50,
+        num_stages=4,
         out_indices=(0, 1, 2, 3),
-        with_cp=False,
-        convert_weights=True,
-        frozen_stages=-1,
-        init_cfg=dict(
-            type='Pretrained',
-            checkpoint=
-            'https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_tiny_patch4_window7_224.pth'
-        )),
-    panoptic_head=dict(
-        type='Mask2FormerHead',
-        in_channels=[96, 192, 384, 768],
-        strides=[4, 8, 16, 32],
-        feat_channels=256,
+        frozen_stages=1,
+        norm_cfg=dict(type='BN', requires_grad=True),
+        norm_eval=True,
+        style='pytorch',
+        init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50'),
+        conv_cfg=dict(type='ConvAWS'),
+        sac=dict(type='SAC', use_deform=True),
+        stage_with_sac=(False, True, True, True),
+        output_img=True),
+    neck=dict(
+        type='RFP',
+        in_channels=[256, 512, 1024, 2048],
         out_channels=256,
-        num_things_classes=41,
-        num_stuff_classes=0,
-        num_queries=100,
-        num_transformer_feat_level=3,
-        pixel_decoder=dict(
-            type='MSDeformAttnPixelDecoder',
-            num_outs=3,
-            norm_cfg=dict(type='GN', num_groups=32),
-            act_cfg=dict(type='ReLU'),
-            encoder=dict(
-                type='DetrTransformerEncoder',
-                num_layers=6,
-                transformerlayers=dict(
-                    type='BaseTransformerLayer',
-                    attn_cfgs=dict(
-                        type='MultiScaleDeformableAttention',
-                        embed_dims=256,
-                        num_heads=8,
-                        num_levels=3,
-                        num_points=4,
-                        im2col_step=64,
-                        dropout=0.0,
-                        batch_first=False,
-                        norm_cfg=None,
-                        init_cfg=None),
-                    ffn_cfgs=dict(
-                        type='FFN',
-                        embed_dims=256,
-                        feedforward_channels=1024,
-                        num_fcs=2,
-                        ffn_drop=0.0,
-                        act_cfg=dict(type='ReLU', inplace=True)),
-                    operation_order=('self_attn', 'norm', 'ffn', 'norm')),
-                init_cfg=None),
-            positional_encoding=dict(
-                type='SinePositionalEncoding', num_feats=128, normalize=True),
-            init_cfg=None),
-        enforce_decoder_input_project=False,
-        positional_encoding=dict(
-            type='SinePositionalEncoding', num_feats=128, normalize=True),
-        transformer_decoder=dict(
-            type='DetrTransformerDecoder',
-            return_intermediate=True,
-            num_layers=9,
-            transformerlayers=dict(
-                type='DetrTransformerDecoderLayer',
-                attn_cfgs=dict(
-                    type='MultiheadAttention',
-                    embed_dims=256,
-                    num_heads=8,
-                    attn_drop=0.0,
-                    proj_drop=0.0,
-                    dropout_layer=None,
-                    batch_first=False),
-                ffn_cfgs=dict(
-                    embed_dims=256,
-                    feedforward_channels=2048,
-                    num_fcs=2,
-                    act_cfg=dict(type='ReLU', inplace=True),
-                    ffn_drop=0.0,
-                    dropout_layer=None,
-                    add_identity=True),
-                feedforward_channels=2048,
-                operation_order=('cross_attn', 'norm', 'self_attn', 'norm',
-                                 'ffn', 'norm')),
-            init_cfg=None),
+        num_outs=5,
+        rfp_steps=2,
+        aspp_out_channels=64,
+        aspp_dilations=(1, 3, 6, 1),
+        rfp_backbone=dict(
+            rfp_inplanes=256,
+            type='DetectoRS_ResNet',
+            depth=50,
+            num_stages=4,
+            out_indices=(0, 1, 2, 3),
+            frozen_stages=1,
+            norm_cfg=dict(type='BN', requires_grad=True),
+            norm_eval=True,
+            conv_cfg=dict(type='ConvAWS'),
+            sac=dict(type='SAC', use_deform=True),
+            stage_with_sac=(False, True, True, True),
+            pretrained='torchvision://resnet50',
+            style='pytorch')),
+    rpn_head=dict(
+        type='RPNHead',
+        in_channels=256,
+        feat_channels=256,
+        anchor_generator=dict(
+            type='AnchorGenerator',
+            scales=[8],
+            ratios=[0.5, 1.0, 2.0],
+            strides=[4, 8, 16, 32, 64]),
+        bbox_coder=dict(
+            type='DeltaXYWHBBoxCoder',
+            target_means=[0.0, 0.0, 0.0, 0.0],
+            target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
-            type='CrossEntropyLoss',
-            use_sigmoid=False,
-            loss_weight=2.0,
-            reduction='mean',
-            class_weight=[
-                1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.1
-            ]),
-        loss_mask=dict(
-            type='CrossEntropyLoss',
-            use_sigmoid=True,
-            reduction='mean',
-            loss_weight=5.0),
-        loss_dice=dict(
-            type='DiceLoss',
-            use_sigmoid=True,
-            activate=True,
-            reduction='mean',
-            naive_dice=True,
-            eps=1.0,
-            loss_weight=5.0)),
-    panoptic_fusion_head=dict(
-        type='MaskFormerFusionHead',
-        num_things_classes=41,
-        num_stuff_classes=0,
-        loss_panoptic=None,
-        init_cfg=None),
+            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
+        loss_bbox=dict(
+            type='SmoothL1Loss', beta=0.1111111111111111, loss_weight=1.0)),
+    roi_head=dict(
+        type='HybridTaskCascadeRoIHead',
+        interleaved=True,
+        mask_info_flow=True,
+        num_stages=3,
+        stage_loss_weights=[1, 0.5, 0.25],
+        bbox_roi_extractor=dict(
+            type='SingleRoIExtractor',
+            roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
+            out_channels=256,
+            featmap_strides=[4, 8, 16, 32]),
+        bbox_head=[
+            dict(
+                type='Shared2FCBBoxHead',
+                in_channels=256,
+                fc_out_channels=1024,
+                roi_feat_size=7,
+                num_classes=41,
+                bbox_coder=dict(
+                    type='DeltaXYWHBBoxCoder',
+                    target_means=[0.0, 0.0, 0.0, 0.0],
+                    target_stds=[0.1, 0.1, 0.2, 0.2]),
+                reg_class_agnostic=True,
+                loss_cls=dict(
+                    type='CrossEntropyLoss',
+                    use_sigmoid=False,
+                    loss_weight=1.0),
+                loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
+                               loss_weight=1.0)),
+            dict(
+                type='Shared2FCBBoxHead',
+                in_channels=256,
+                fc_out_channels=1024,
+                roi_feat_size=7,
+                num_classes=41,
+                bbox_coder=dict(
+                    type='DeltaXYWHBBoxCoder',
+                    target_means=[0.0, 0.0, 0.0, 0.0],
+                    target_stds=[0.05, 0.05, 0.1, 0.1]),
+                reg_class_agnostic=True,
+                loss_cls=dict(
+                    type='CrossEntropyLoss',
+                    use_sigmoid=False,
+                    loss_weight=1.0),
+                loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
+                               loss_weight=1.0)),
+            dict(
+                type='Shared2FCBBoxHead',
+                in_channels=256,
+                fc_out_channels=1024,
+                roi_feat_size=7,
+                num_classes=41,
+                bbox_coder=dict(
+                    type='DeltaXYWHBBoxCoder',
+                    target_means=[0.0, 0.0, 0.0, 0.0],
+                    target_stds=[0.033, 0.033, 0.067, 0.067]),
+                reg_class_agnostic=True,
+                loss_cls=dict(
+                    type='CrossEntropyLoss',
+                    use_sigmoid=False,
+                    loss_weight=1.0),
+                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))
+        ],
+        mask_roi_extractor=dict(
+            type='SingleRoIExtractor',
+            roi_layer=dict(type='RoIAlign', output_size=14, sampling_ratio=0),
+            out_channels=256,
+            featmap_strides=[4, 8, 16, 32]),
+        mask_head=[
+            dict(
+                type='HTCMaskHead',
+                with_conv_res=False,
+                num_convs=4,
+                in_channels=256,
+                conv_out_channels=256,
+                num_classes=41,
+                loss_mask=dict(
+                    type='CrossEntropyLoss', use_mask=True, loss_weight=1.0)),
+            dict(
+                type='HTCMaskHead',
+                num_convs=4,
+                in_channels=256,
+                conv_out_channels=256,
+                num_classes=41,
+                loss_mask=dict(
+                    type='CrossEntropyLoss', use_mask=True, loss_weight=1.0)),
+            dict(
+                type='HTCMaskHead',
+                num_convs=4,
+                in_channels=256,
+                conv_out_channels=256,
+                num_classes=41,
+                loss_mask=dict(
+                    type='CrossEntropyLoss', use_mask=True, loss_weight=1.0))
+        ],
+        semantic_roi_extractor=dict(
+            type='SingleRoIExtractor',
+            roi_layer=dict(type='RoIAlign', output_size=14, sampling_ratio=0),
+            out_channels=256,
+            featmap_strides=[8]),
+        semantic_head=dict(
+            type='FusedSemanticHead',
+            num_ins=5,
+            fusion_level=1,
+            num_convs=4,
+            in_channels=256,
+            conv_out_channels=256,
+            num_classes=41,
+            loss_seg=dict(
+                type='CrossEntropyLoss', ignore_index=255, loss_weight=0.2))),
     train_cfg=dict(
-        num_points=12544,
-        oversample_ratio=3.0,
-        importance_sample_ratio=0.75,
-        assigner=dict(
-            type='MaskHungarianAssigner',
-            cls_cost=dict(type='ClassificationCost', weight=2.0),
-            mask_cost=dict(
-                type='CrossEntropyLossCost', weight=5.0, use_sigmoid=True),
-            dice_cost=dict(
-                type='DiceCost', weight=5.0, pred_act=True, eps=1.0)),
-        sampler=dict(type='MaskPseudoSampler')),
+        rpn=dict(
+            assigner=dict(
+                type='MaxIoUAssigner',
+                pos_iou_thr=0.7,
+                neg_iou_thr=0.3,
+                min_pos_iou=0.3,
+                ignore_iof_thr=-1),
+            sampler=dict(
+                type='RandomSampler',
+                num=256,
+                pos_fraction=0.5,
+                neg_pos_ub=-1,
+                add_gt_as_proposals=False),
+            allowed_border=0,
+            pos_weight=-1,
+            debug=False),
+        rpn_proposal=dict(
+            nms_pre=2000,
+            max_per_img=2000,
+            nms=dict(type='nms', iou_threshold=0.7),
+            min_bbox_size=0),
+        rcnn=[
+            dict(
+                assigner=dict(
+                    type='MaxIoUAssigner',
+                    pos_iou_thr=0.5,
+                    neg_iou_thr=0.5,
+                    min_pos_iou=0.5,
+                    ignore_iof_thr=-1),
+                sampler=dict(
+                    type='RandomSampler',
+                    num=512,
+                    pos_fraction=0.25,
+                    neg_pos_ub=-1,
+                    add_gt_as_proposals=True),
+                mask_size=28,
+                pos_weight=-1,
+                debug=False),
+            dict(
+                assigner=dict(
+                    type='MaxIoUAssigner',
+                    pos_iou_thr=0.6,
+                    neg_iou_thr=0.6,
+                    min_pos_iou=0.6,
+                    ignore_iof_thr=-1),
+                sampler=dict(
+                    type='RandomSampler',
+                    num=512,
+                    pos_fraction=0.25,
+                    neg_pos_ub=-1,
+                    add_gt_as_proposals=True),
+                mask_size=28,
+                pos_weight=-1,
+                debug=False),
+            dict(
+                assigner=dict(
+                    type='MaxIoUAssigner',
+                    pos_iou_thr=0.7,
+                    neg_iou_thr=0.7,
+                    min_pos_iou=0.7,
+                    ignore_iof_thr=-1),
+                sampler=dict(
+                    type='RandomSampler',
+                    num=512,
+                    pos_fraction=0.25,
+                    neg_pos_ub=-1,
+                    add_gt_as_proposals=True),
+                mask_size=28,
+                pos_weight=-1,
+                debug=False)
+        ]),
     test_cfg=dict(
-        panoptic_on=False,
-        semantic_on=False,
-        instance_on=True,
-        max_per_image=100,
-        iou_thr=0.8,
-        filter_low_score=True),
-    init_cfg=None)
-image_size = (1024, 1024)
-embed_multi = dict(lr_mult=1.0, decay_mult=0.0)
-optimizer = dict(
-    type='AdamW',
-    lr=0.0001,
-    weight_decay=0.05,
-    eps=1e-08,
-    betas=(0.9, 0.999),
-    paramwise_cfg=dict(
-        custom_keys=dict({
-            'backbone':
-            dict(lr_mult=0.1, decay_mult=1.0),
-            'query_embed':
-            dict(lr_mult=1.0, decay_mult=0.0),
-            'query_feat':
-            dict(lr_mult=1.0, decay_mult=0.0),
-            'level_embed':
-            dict(lr_mult=1.0, decay_mult=0.0),
-            'backbone.patch_embed.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'absolute_pos_embed':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'relative_position_bias_table':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.stages.0.blocks.0.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.stages.0.blocks.1.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.stages.1.blocks.0.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.stages.1.blocks.1.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.stages.2.blocks.0.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.stages.2.blocks.1.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.stages.2.blocks.2.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.stages.2.blocks.3.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.stages.2.blocks.4.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.stages.2.blocks.5.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.stages.3.blocks.0.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.stages.3.blocks.1.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.stages.0.downsample.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.stages.1.downsample.norm':
-            dict(lr_mult=0.1, decay_mult=0.0),
-            'backbone.stages.2.downsample.norm':
-            dict(lr_mult=0.1, decay_mult=0.0)
-        }),
-        norm_decay_mult=0.0))
-optimizer_config = dict(grad_clip=dict(max_norm=0.01, norm_type=2))
-lr_config = dict(
-    policy='step',
-    gamma=0.1,
-    by_epoch=False,
-    step=[327778, 355092],
-    warmup='linear',
-    warmup_by_epoch=False,
-    warmup_ratio=1.0,
-    warmup_iters=10)
-max_iters = 8000
-runner = dict(type='IterBasedRunner', max_iters=8000)
-interval = 1000
-dynamic_intervals = [(365001, 368750)]
-pad_cfg = dict(img=(128, 128, 128), masks=0, seg=255)
-pretrained = 'https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_tiny_patch4_window7_224.pth'
-depths = [2, 2, 6, 2]
-backbone_norm_multi = dict(lr_mult=0.1, decay_mult=0.0)
-backbone_embed_multi = dict(lr_mult=0.1, decay_mult=0.0)
-custom_keys = dict({
-    'backbone':
-    dict(lr_mult=0.1, decay_mult=1.0),
-    'backbone.patch_embed.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'backbone.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'absolute_pos_embed':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'relative_position_bias_table':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'query_embed':
-    dict(lr_mult=1.0, decay_mult=0.0),
-    'query_feat':
-    dict(lr_mult=1.0, decay_mult=0.0),
-    'level_embed':
-    dict(lr_mult=1.0, decay_mult=0.0),
-    'backbone.stages.0.blocks.0.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'backbone.stages.0.blocks.1.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'backbone.stages.1.blocks.0.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'backbone.stages.1.blocks.1.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'backbone.stages.2.blocks.0.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'backbone.stages.2.blocks.1.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'backbone.stages.2.blocks.2.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'backbone.stages.2.blocks.3.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'backbone.stages.2.blocks.4.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'backbone.stages.2.blocks.5.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'backbone.stages.3.blocks.0.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'backbone.stages.3.blocks.1.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'backbone.stages.0.downsample.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'backbone.stages.1.downsample.norm':
-    dict(lr_mult=0.1, decay_mult=0.0),
-    'backbone.stages.2.downsample.norm':
-    dict(lr_mult=0.1, decay_mult=0.0)
-})
+        rpn=dict(
+            nms_pre=1000,
+            max_per_img=1000,
+            nms=dict(type='nms', iou_threshold=0.7),
+            min_bbox_size=0),
+        rcnn=dict(
+            score_thr=0.001,
+            nms=dict(type='nms', iou_threshold=0.5),
+            max_per_img=100,
+            mask_thr_binary=0.5)))
 device = 'cuda'
 work_dir = './tutorial_exps'
 seed = 0
 gpu_ids = range(0, 1)
-
 
